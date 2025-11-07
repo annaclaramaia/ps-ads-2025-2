@@ -1,6 +1,6 @@
-import jwt from 'jsonwebtoken'
 import prisma from '../database/client.js'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 const controller = {}   // Objeto vazio
 
@@ -14,7 +14,7 @@ controller.create = async function(req, res) {
     // é necessário gerar o hash da senha antes
     // de armazená-lo no BD. 12 é a quantidade de passos de criptografia
     if(req.body.password) {
-       req.body.password = await bcrypt.hash(req.body.password, 12)
+      req.body.password = await bcrypt.hash(req.body.password, 12)
     }
 
     // Para a inserção no BD, os dados são enviados
@@ -40,12 +40,13 @@ controller.create = async function(req, res) {
 
 controller.retrieveAll = async function(req, res) {
   try {
-    // Recupera todos os registros de usuários, ordenados
+    // Recupera todos os registros de clientes, ordenados
     // pelo campo "name"
     const result = await prisma.user.findMany({
-      	  	  omit: { password: true },
-      	  	  orderBy: [ { fullname: 'asc' } ]
+      omit: { password: true },
+      orderBy: [ { fullname: 'asc' } ]
     })
+
     // HTTP 200: OK (implícito)
     res.send(result)
   }
@@ -62,11 +63,11 @@ controller.retrieveAll = async function(req, res) {
 
 controller.retrieveOne = async function (req, res) {
   try {
-    // Busca no banco de dados apenas o usuário indicado
+    // Busca no banco de dados apenas o cliente indicado
     // pelo parâmetro "id"
     const result = await prisma.user.findUnique({
-            omit: { password: true },
-      	  where: { id: Number(req.params.id) }
+      omit: { password: true },
+      where: { id: Number(req.params.id) }
     })
 
     // Encontrou ~> HTTP 200: OK (implícito)
@@ -180,9 +181,28 @@ controller.login = async function (req, res) {
       { expiresIn: '24h' }        // Prazo de validade do token
     )
 
-    // Retorna o token e o usuário autenticado, com o status
+    // Formamos o cookie para enviar ao front-end
+    res.cookie(process.env.AUTH_COOKIE_NAME, token, {
+      httpOnly: true,     // Torna o cookie inacessível para JavaScript
+      secure: true,       // O cookie só trafegará em HTTPS ou localhost
+      sameSite: 'None',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000   // 24h
+    })
+
+    // Cookie não HTTP-only, acessível via JS no front-end
+    res.cookie('not-http-only', 'Este-cookie-NAO-eh-HTTP-Only', {
+      httpOnly: false,
+      secure: true,   // O cookie será criptografado em conexões https
+      sameSite: 'None',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 100  // 24h
+    })
+
+    // Retorna APENAS o usuário autenticado com
     // HTTP 200: OK (implícito)
-    res.send({ user, token })
+    res.send({user})
+
   }
   catch(error) {
     // Se algo de errado acontecer, cairemos aqui
@@ -192,6 +212,22 @@ controller.login = async function (req, res) {
     console.error(error)
     res.status(500).end()
   }
+}
+
+controller.me = function(req, res) {
+  /*
+    Retorna o usuário autenticado (caso haja) que foi armazenado na
+    variável req.authUser pelo middleware de autorização logo após
+    o token ter sido decodificado
+  */
+  return res.send(req?.authUser)
+}
+
+controller.logout = function(req, res) {
+  // Apaga no front-end o cookie que armazena o token de autorização
+  res.clearCookie(process.env.AUTH_COOKIE_NAME)
+  // HTTP 204: No Content
+  res.status(204).end()
 }
 
 export default controller

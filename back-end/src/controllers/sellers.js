@@ -32,7 +32,7 @@ controller.create = async function(req, res) {
 controller.retrieveAll = async function(req, res) {
   try {
     // Recupera todos os registros de vendedores, ordenados
-    // pelo campo "name"
+    // pelo campo "fullname"
     const result = await prisma.seller.findMany({
       orderBy: [ { fullname: 'asc' } ]
     })
