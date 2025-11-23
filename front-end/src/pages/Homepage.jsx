@@ -35,6 +35,13 @@ export default function Homepage() {
           }
         </Typography>
       </Typography>
+
+       <Typography variant="h6">
+        Exposição de <em>cookies</em>
+        <Typography variant="caption" style={{ fontFamily: 'monospace '}}>
+          <p>{ document.cookie }</p>  
+        </Typography>
+      </Typography>
       
     </>
   )
