@@ -32,8 +32,8 @@ app.use('/', indexRouter)
 /**************** ROTAS *******************/
 
 // Middleware de verificação de autorização
-// import authMiddleware from './middleware/auth.js'
-// app.use(authMiddleware)
+import authMiddleware from './middleware/auth.js'
+app.use(authMiddleware)
 
 import customersRoute from './routes/customers.js'
 app.use('/customers', customersRoute)
