@@ -43,9 +43,10 @@ controller.retrieveAll = async function(req, res) {
     // Recupera todos os registros de clientes, ordenados
     // pelo campo "name"
     const result = await prisma.user.findMany({
-      omit: { password: true },
-      orderBy: [ { fullname: 'asc' } ]
-    })
+      	  	  omit: { password: true },
+      	  	  orderBy: [ { fullname: 'asc' } ]
+    			})
+
 
     // HTTP 200: OK (implícito)
     res.send(result)
@@ -66,9 +67,10 @@ controller.retrieveOne = async function (req, res) {
     // Busca no banco de dados apenas o cliente indicado
     // pelo parâmetro "id"
     const result = await prisma.user.findUnique({
-      omit: { password: true },
-      where: { id: Number(req.params.id) }
-    })
+            omit: { password: true },
+      	  where: { id: Number(req.params.id) }
+    		})
+
 
     // Encontrou ~> HTTP 200: OK (implícito)
     if(result) res.send(result)
