@@ -1,4 +1,6 @@
 import prisma from '../database/client.js'
+import Car from '../models/Car.js'
+import { ZodError } from 'zod'
 
 const controller = {}   // Objeto vazio
 
@@ -8,6 +10,11 @@ const controller = {}   // Objeto vazio
 // res ~> representa a resposta (response)
 controller.create = async function(req, res) {
   try {
+    // Para a inserção no BD, os dados são enviados
+    // dentro de um objeto chamado "body" que vem
+    // dentro da requisição ("req")
+    Car.parse(req.body)
+
     // Para a inserção no BD, os dados são enviados
     // dentro de um objeto chamado "body" que vem
     // dentro da requisição ("req")
@@ -21,6 +28,10 @@ controller.create = async function(req, res) {
   catch(error) {
     // Se algo de errado ocorrer, cairemos aqui
     console.error(error)  // Exibe o erro no terminal
+
+    // Se for erro de validação do Zod, retorna
+    // HTTP 422: Unprocessable Entity
+    if(error instanceof ZodError) res.status(422).send(error.issues)
 
     // Enviamos como resposta o código HTTP relativo
     // a erro interno do servidor
@@ -77,6 +88,10 @@ controller.retrieveOne = async function (req, res) {
 
 controller.update = async function(req, res) {
   try {
+    // Invoca a validação do modelo do Zod para os dados que
+    // vieram em req.body
+    Car.parse(req.body)
+
     // Busca o registro no banco de dados por seu id
     // e o atualiza com as informações que vieram em req.body
     await prisma.car.update({
@@ -93,6 +108,9 @@ controller.update = async function(req, res) {
 
     // Não encontrou e não atualizou ~> HTTP 404: Not Found
     if(error?.code === 'P2025') res.status(404).end()
+
+    // Erro do Zod ~> HTTP 422: Unprocessable Entity
+    else if(error instanceof ZodError) res.status(422).send(error.issues)
 
     // Se não for erro de não encontrado, retorna o habitual
     // HTTP 500: Internal Server Error
